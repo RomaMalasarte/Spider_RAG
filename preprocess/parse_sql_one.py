@@ -11,7 +11,7 @@ from collections import OrderedDict
 from nltk import word_tokenize, tokenize
 from os.path import isfile, isdir, join, split, exists, splitext
 
-from process_sql import get_sql
+from util.process_sql import get_sql
 
 class Schema:
     """
