@@ -1,7 +1,6 @@
-import json
 import torch
 import streamlit as st
-from typing import Dict, List
+from typing import Dict
 from util.retrieve import retrieve
 from util.generation import generate_sql
 from util.init import init_models, initialize_graph
