@@ -9,7 +9,7 @@ from util.load_data import load_schema, load_data_from_file, compute_embedding
 
 def rag_query(db_id: str, query:Dict, k: int = 3) -> Dict:
     """
-    One‑liner for the full RAG pipeline:
+    One-liner for the full RAG pipeline:
       1. retrieve k neighbours,
       2. sample SQLs,
       3. pick the consensus execution.
