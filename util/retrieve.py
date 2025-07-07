@@ -122,9 +122,10 @@ def fk_edges_from(tbl_name: str):
 
 def multi_stage_search(
     tables: List[str],
+    table_embeds: List[Dict],
     G: nx.MultiDiGraph,
-    table_embeds: np.ndarray,
-    q_vec, breadth: int = 4, 
+    q_vec: np.ndarray, 
+    breadth: int = 4, 
     max_hops: int = 4, 
     top_n_columns: int = 3
 ) -> List[List[Tuple[str, float]]]:

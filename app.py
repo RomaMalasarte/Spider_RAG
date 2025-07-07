@@ -33,6 +33,9 @@ def rag_query(
         llm_model=llm_model,
         device=DEVICE,
         query=query,
+        G=st.session_state.G,
+        tables=st.session_state.tables,
+        table_embeds=st.session_state.table_embeds,
         retrieved_docs=retrieved
     )
 

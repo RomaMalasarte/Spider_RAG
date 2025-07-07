@@ -7,6 +7,9 @@ def generate_sql(
     llm_model,
     device: str,
     query: Dict,
+    tables: List[str],
+    table_embeds: List[Dict],
+    G,
     retrieved_docs: List[Dict],
     max_length: int = 256,
     num_of_samples: int = 6,
@@ -14,7 +17,12 @@ def generate_sql(
     top_p: float = 0.8,
     top_k: int = 20,
 ) -> str:
-    layers = multi_stage_search(query["embedding"], breadth=4, max_hops=4)
+    layers = multi_stage_search(
+        tables=tables,
+        table_embeds=table_embeds,
+        G=G,
+        q_vec=query["embedding"]
+    )
     sys_context = (
         "You are now an excellent SQL writer. I will give you the database schema, and "
         "some SQL examples associated with similar questions that you are going to answer\n"
