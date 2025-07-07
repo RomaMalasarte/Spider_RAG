@@ -4,6 +4,7 @@ import torch
 import networkx as nx
 from pathlib import Path
 from typing import Dict, List, Tuple
+from util.load_data import database_value
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -38,7 +39,7 @@ def init_graph(
     pk_set: set,
     G: nx.MultiDiGraph = nx.MultiDiGraph()
 )-> nx.MultiDiGraph:
-    global ROOT_TABLES
+    
     print("[data] Populating the Knowledge Graph...\n")
     G.add_nodes_from(tables)
     colidx_to_tbl = {i: tables[tbl_id] for i, (tbl_id, _) in enumerate(columns_orig) if tbl_id != -1}

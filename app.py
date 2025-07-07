@@ -3,7 +3,7 @@ import streamlit as st
 from typing import Dict
 from util.retrieve import retrieve
 from util.generation import generate_sql
-from util.init import init_models, initialize_graph
+from util.init import init_models, init_graph
 from util.self_improve import find_most_common_query_result
 from util.load_data import load_schema, load_data_from_file, compute_embedding
 
@@ -58,12 +58,13 @@ if not st.session_state.initialized:
         device=DEVICE
     )
 
-    G = initialize_graph(
+    G = init_graph(
         tables=tables,
         columns_orig=columns_orig,
         foreign_pairs=foreign_pairs,
         pk_set=pk_set,
-    ) 
+    )
+
     # Store in session state
     st.session_state.schema = schema
     st.session_state.tables = tables
@@ -116,11 +117,14 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
     with st.spinner("Generating SQL query..."):
         # For demo purposes, show a simple response
         st.success("SQL query generated!")
+
         q_vec = compute_embedding(embed_model, user_question)
+        
         item = {
             "question": user_question,
             "embedding": q_vec
         }
+
         result = rag_query("departmetn_store", item, 3)
         sql_pred = result["generated_sql"]
         
