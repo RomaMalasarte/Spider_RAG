@@ -1,10 +1,11 @@
 import torch
 from typing import Dict, List
-from util.retrieve import retrieve, multi_stage_search, cols_of_table_top_k, fk_edges_from
+from util.retrieve import multi_stage_search, cols_of_table_top_k, fk_edges_from
 
 def generate_sql(
     tokenizer,
     llm_model,
+    device: str,
     query: Dict,
     retrieved_docs: List[Dict],
     max_length: int = 256,
@@ -55,8 +56,6 @@ def generate_sql(
 
     for i, doc in enumerate(reversed(retrieved_docs), 1):
         context += "\n"
-        with open("output.txt", "a", encoding="utf-8") as f:
-            print(f"similarity: {doc['similarity']}\n", file=f)
         context += f"Question: {doc['question']}\n"
         context += f"SQL: {doc['query']}\n"
     context += "-" * 60
@@ -75,35 +74,25 @@ def generate_sql(
         }
     ]
 
-    prompt = TOKENIZER.apply_chat_template(
+    prompt = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True,
     )
     prompt += "###SQL: "
 
-    print("\n--- PROMPT ---")
-    print(prompt)
-    with open("output.txt", "a", encoding="utf-8") as f:
-      print(prompt, file=f)
-    print("--- END PROMPT ---\n")
-
-    inputs = TOKENIZER(
+    inputs = tokenizer(
         prompt,
         return_tensors="pt",
         truncation=True,
         max_length=2048,
-    ).to(DEVICE)
-
-    print(f"Input tokens: {inputs['input_ids'].shape[1]}")
-
+    ).to(device)
     generated_samples = []
 
-    print("\n--- Generating SQL ---")
     temp_idx = 0
     for i in range(num_of_samples):
         with torch.no_grad():
-            outputs = LLM_MODEL.generate(
+            outputs = llm_model.generate(
                 **inputs,
                 max_new_tokens=max_length,
                 temperature=temperature,
@@ -111,36 +100,15 @@ def generate_sql(
                 top_k=top_k,
                 do_sample=True,
                 #repetition_penalty=1.1,
-                pad_token_id=TOKENIZER.pad_token_id,
-                eos_token_id=TOKENIZER.eos_token_id,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
             )
             temp_idx += 1
 
         input_length = inputs["input_ids"].shape[1]
         generated_ids = outputs[0][input_length:]
-        generated_only = TOKENIZER.decode(generated_ids, skip_special_tokens=True)
+        generated_only = tokenizer.decode(generated_ids, skip_special_tokens=True)
         generated_only = generated_only.replace("\n", "").strip()
-        print(generated_only)
         generated_samples.append(generated_only)
-        print("--- END GENERATED ---\n")
 
     return generated_samples
-
-
-def rag_query(db_id: str, query:Dict, k: int = 3) -> Dict:
-    """
-    One‑liner for the full RAG pipeline:
-      1. retrieve k neighbours,
-      2. sample SQLs,
-      3. pick the consensus execution.
-    Returns a dict with the SQL and the examples retrieved.
-    """
-
-    retrieved = retrieve(query["embedding"], k=k)
-    candidates = generate_sql(query, retrieved)
-    db_path = f"spider_data/database/{db_id}/{db_id}.sqlite"
-    best_sql = find_most_common_query_result(candidates, db_path)
-    return {
-        "question"          : query["question"],
-        "generated_sql"     : best_sql,
-    }

@@ -1,13 +1,19 @@
 import torch
 import streamlit as st
-from typing import Dict
+from typing import Dict, List
 from util.retrieve import retrieve
 from util.generation import generate_sql
 from util.init import init_models, init_graph
 from util.self_improve import find_most_common_query_result
 from util.load_data import load_schema, load_data_from_file, compute_embedding
 
-def rag_query(db_id: str, query:Dict, k: int = 3) -> Dict:
+def rag_query(
+    tokenizer,
+    llm_model,
+    documents: List[Dict],
+    db_id: str,
+    query:Dict, 
+    k: int = 3) -> Dict:
     """
     One-liner for the full RAG pipeline:
       1. retrieve k neighbours,
@@ -16,9 +22,21 @@ def rag_query(db_id: str, query:Dict, k: int = 3) -> Dict:
     Returns a dict with the SQL and the examples retrieved.
     """
 
-    retrieved = retrieve(query["embedding"], k=k)
-    candidates = generate_sql(query, retrieved)
-    db_path = f"spider_data/database/{db_id}/{db_id}.sqlite"
+    retrieved = retrieve(
+        documents=documents,
+        q_vec=query["embedding"], 
+        k=k
+    )
+
+    candidates = generate_sql(
+        tokenizer=tokenizer, 
+        llm_model=llm_model,
+        device=DEVICE,
+        query=query,
+        retrieved_docs=retrieved
+    )
+
+    db_path = f"/content/Spider_RAG/spider_data/database/{db_id}/{db_id}.sqlite"
     best_sql = find_most_common_query_result(candidates, db_path)
     return {
         "question"          : query["question"],
@@ -124,7 +142,7 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
         st.success("SQL query generated!")
 
         q_vec = compute_embedding(embed_model, user_question)
-        
+
         item = {
             "question": user_question,
             "embedding": q_vec
