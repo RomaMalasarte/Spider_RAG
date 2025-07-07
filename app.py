@@ -56,7 +56,7 @@ if 'initialized' not in st.session_state:
     st.session_state.current_result = None
 
 # Global variables
-EMBEDDING_MODEL_NAME = "BAAI-bge-m3"
+EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
 LLM_MODEL_NAME = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
