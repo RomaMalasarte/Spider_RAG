@@ -65,6 +65,7 @@ def get_top_k_columns_for_table(
 def cols_of_table_top_k(
     column_embeds: List[Dict],
     G: nx.MultiDiGraph,
+    tables: List[Dict],
     tbl_name: str, 
     q_vec: np.ndarray, 
     k: int = 5
@@ -72,7 +73,7 @@ def cols_of_table_top_k(
     """
     Return a list of top-k most similar columns with their info.
     """
-    top_columns = get_top_k_columns_for_table(column_embeds, G, tbl_name, q_vec, k)
+    top_columns = get_top_k_columns_for_table(column_embeds, G, tables, tbl_name, q_vec, k)
     cols = []
 
     for col_node, similarity, attrs in top_columns:

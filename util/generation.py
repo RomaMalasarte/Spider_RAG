@@ -42,7 +42,7 @@ def generate_sql(
     for hop, layer in enumerate(reversed(layers)):
         for score, tbl in reversed(layer):
             # Get top-k columns based on similarity to query
-            cols = cols_of_table_top_k(column_embeds, G, tbl, q_vec, k=5)
+            cols = cols_of_table_top_k(column_embeds, G, tables, tbl, q_vec, k=5)
             fks = [(txt, key) for txt, key in fk_edges_from(G, tbl)]
 
             table_schema += f"#Table: {tbl}\n"

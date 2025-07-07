@@ -1,4 +1,7 @@
+import nltk
+import spacy
 import torch
+import traceback
 import streamlit as st
 from typing import Dict, List
 from util.retrieve import retrieve
@@ -6,6 +9,11 @@ from util.generation import generate_sql
 from util.init import init_models, init_graph
 from util.self_improve import find_most_common_query_result
 from util.load_data import load_schema, load_data_from_file, compute_embedding
+
+@st.cache_resource
+def setup_nltk():
+    nltk.download('punkt_tab')
+    return True
 
 def rag_query(
     tokenizer,
@@ -31,7 +39,7 @@ def rag_query(
     candidates = generate_sql(
         tokenizer=tokenizer, 
         llm_model=llm_model,
-        device=DEVICE,
+        device="cuda",
         query=query,
         G=st.session_state.G,
         tables=st.session_state.tables,
@@ -101,6 +109,8 @@ if not st.session_state.initialized:
                 foreign_pairs=foreign_pairs,
                 pk_set=pk_set,
             )
+
+            setup_nltk()
             
             # Store in session state
             st.session_state.schema = schema
@@ -235,7 +245,7 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
             st.write("4. Switch to CPU by changing DEVICE to 'cpu'")
             
         except Exception as e:
-            st.error(f"Error generating SQL: {str(e)}")
+            st.error(f"Error generating SQL: {str(traceback.format_exc())}")
             st.write("Debug info:")
             st.write(f"- Question: {user_question}")
             st.write(f"- Device: {DEVICE}")
