@@ -36,6 +36,7 @@ def rag_query(
         G=st.session_state.G,
         tables=st.session_state.tables,
         table_embeds=st.session_state.table_embeds,
+        column_embeds=st.session_state.column_embeds,
         retrieved_docs=retrieved
     )
 

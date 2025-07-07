@@ -63,6 +63,8 @@ def get_top_k_columns_for_table(
     return table_columns[:k]
 
 def cols_of_table_top_k(
+    column_embeds: List[Dict],
+    G: nx.MultiDiGraph,
     tbl_name: str, 
     q_vec: np.ndarray, 
     k: int = 5
@@ -70,7 +72,7 @@ def cols_of_table_top_k(
     """
     Return a list of top-k most similar columns with their info.
     """
-    top_columns = get_top_k_columns_for_table(tbl_name, q_vec, k)
+    top_columns = get_top_k_columns_for_table(column_embeds, G, tbl_name, q_vec, k)
     cols = []
 
     for col_node, similarity, attrs in top_columns:
@@ -102,7 +104,7 @@ def cols_of_table_top_k(
 
     return cols
 
-def fk_edges_from(tbl_name: str):
+def fk_edges_from(G, tbl_name: str):
     """
     Return each outgoing FK edge as a tuple:
         ('parent_table → child_table', 'fk_column')
