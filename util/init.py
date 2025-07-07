@@ -18,12 +18,10 @@ def init_models(
     """
     tokenizer = AutoTokenizer.from_pretrained(
         llm_model_name,
-        token= userdata.get("HF_TOKEN"),
         trust_remote_code=True
     )
     llm_model = AutoModelForCausalLM.from_pretrained(
         llm_model_name,
-        token=userdata.get("HF_TOKEN"),
         torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
     )
     llm_model.to(device)
