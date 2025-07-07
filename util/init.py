@@ -1,10 +1,10 @@
-
 import json
 import torch
 import networkx as nx
 from pathlib import Path
+from google.colab import userdata
+from util.sql import database_value
 from typing import Dict, List, Tuple
-from util.load_data import database_value
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -18,10 +18,12 @@ def init_models(
     """
     tokenizer = AutoTokenizer.from_pretrained(
         llm_model_name,
+        token= userdata.get("HF_TOKEN"),
         trust_remote_code=True
     )
     llm_model = AutoModelForCausalLM.from_pretrained(
         llm_model_name,
+        token=userdata.get("HF_TOKEN"),
         torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
     )
     llm_model.to(device)

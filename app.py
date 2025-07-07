@@ -39,18 +39,23 @@ if 'initialized' not in st.session_state:
 
 # Global variables
 EMBEDDING_MODEL_NAME = "BAAI-bge-m3"
-LLM_MODEL_NAME = "Qwen/Qwen2.5-Coder-14B-Instruct"
+LLM_MODEL_NAME = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Initialize globals
 if not st.session_state.initialized:
     
     schema, tables, columns_orig, foreign_pairs, pk_set = load_schema(
-        schema_file="data/spider_schema.json",
+        schema_file="/content/Spider_RAG/spider_data/tables.json",
         db_id="department_store"
     )
 
-    query_embeds, documents, table_embeds, column_embeds = load_data_from_file()
+    query_embeds, documents, table_embeds, column_embeds = load_data_from_file(
+        max_samples=6912, 
+        test_samples=88,
+        folder_url = 'https://drive.google.com/drive/folders/1KHfedpn61dmY9TEXskacFiRXueB095xc',
+        folder_name = 'BAAI-bge-m3'
+    )
     
     tokenizer, llm_model, embed_model = init_models(
         llm_model_name=LLM_MODEL_NAME,

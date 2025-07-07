@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 from sentence_transformers import SentenceTransformer
 
 def load_schema(
-    schema_file: str = "spider_data/tables.json", 
+    schema_file: str = "/content/Spider_RAG/spider_data/tables.json", 
     db_id: str = "department_store"
     ) -> Tuple[Dict, List, List, List, set]:
     """
@@ -47,8 +47,8 @@ def load_data_from_file(
       column_embeds = pickle.load(f)
 
     if test_samples:
-      column_embeds = column_embeds[:test_samples]
-      #QUERY_EMBEDS = random.sample(QUERY_EMBEDS, test_samples)
+        query_embeds = query_embeds[:test_samples]
+        #QUERY_EMBEDS = random.sample(QUERY_EMBEDS, test_samples)
     if max_samples:
         documents = documents[:max_samples]
         #DOCUMENTS = random.sample(DOCUMENTS, max_samples)
@@ -71,4 +71,3 @@ def compute_embedding(
       )
     
     return vector
-
