@@ -176,6 +176,28 @@ if 'selected_example' in st.session_state:
     user_question = st.session_state.selected_example
     del st.session_state.selected_example
 
+
+# Execute query button
+if st.session_state.current_result:
+    if st.button("▶️ Execute Query", key="execute_query"):
+        st.info("Query execution would show results here")
+
+# Query history
+# Query history as chat-style scroll
+if 'query_history' in st.session_state and st.session_state.query_history:
+    st.markdown("## Query History")
+    for item in reversed(st.session_state.query_history):
+        st.markdown(f"**🧠 Question:** {item['question']}")
+        st.code(item['sql'], language='sql')
+        st.markdown("---")
+
+# Query input
+user_question = st.text_input(
+    "💬 Enter your question about the department store database:",
+    placeholder="e.g., What is the total sales amount for each department?",
+    key="user_question_input"
+)
+
 # Generate button
 if st.button("Generate SQL", type="primary", disabled=not user_question):
     with st.spinner("Generating SQL query..."):
@@ -232,28 +254,6 @@ if st.button("Generate SQL", type="primary", disabled=not user_question):
             st.write(f"- Device: {DEVICE}")
             if torch.cuda.is_available():
                 st.write(f"- GPU Memory: {torch.cuda.memory_allocated() / 1024**3:.2f}GB allocated")
-
-# Execute query button
-if st.session_state.current_result:
-    if st.button("▶️ Execute Query", key="execute_query"):
-        st.info("Query execution would show results here")
-
-# Query history
-# Query history as chat-style scroll
-if 'query_history' in st.session_state and st.session_state.query_history:
-    st.markdown("## Query History")
-    for item in reversed(st.session_state.query_history):
-        st.markdown(f"**🧠 Question:** {item['question']}")
-        st.code(item['sql'], language='sql')
-        st.markdown("---")
-
-
-# Query input
-user_question = st.text_input(
-    "💬 Enter your question about the department store database:",
-    placeholder="e.g., What is the total sales amount for each department?",
-    key="user_question_input"
-)
 
 # Footer
 st.markdown("---")
