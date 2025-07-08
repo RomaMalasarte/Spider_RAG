@@ -198,6 +198,7 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
             
             # Create query item
             query_item = {
+              
                 "question": user_question,
                 "embedding": q_vec
             }
