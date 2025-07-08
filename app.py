@@ -54,7 +54,7 @@ def rag_query(
         "generated_sql": best_sql,
     }
 
-# ✅ Only one call to st.set_page_config is allowed
+# Only one call to st.set_page_config is allowed
 st.set_page_config(
     page_title="Spider RAG SQL Generator",
     page_icon="🕷️",
@@ -127,7 +127,6 @@ if not st.session_state.initialized:
             st.error(f"Error initializing models: {str(e)}")
             st.stop()
 
-# ✅ FIXED: Removed invalid second st.set_page_config call and moved markdown outside
 # Originally this was a syntax error
 st.markdown("""
 This interface generates SQL queries for the department store database using RAG (Retrieval-Augmented Generation).
@@ -150,6 +149,8 @@ st.markdown("""
 
 # Display device info
 with st.sidebar:
+    st.markdown("## Spider RAG Generator")
+    st.markdown("This interface generates SQL queries for the department store database
     st.image("hyundai.png", width=250)
     st.sidebar.info(f"Running on: {DEVICE}")
 if DEVICE == "cuda":
@@ -157,9 +158,6 @@ if DEVICE == "cuda":
     allocated = torch.cuda.memory_allocated() / 1024**3
     reserved = torch.cuda.memory_reserved() / 1024**3
     st.sidebar.info(f"GPU Memory: {allocated:.2f}GB / {reserved:.2f}GB")
-
-# Main interface
-st.header("💬 Ask a Question")
 
 # Query input
 user_question = st.text_input(
