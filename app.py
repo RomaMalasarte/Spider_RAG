@@ -153,8 +153,12 @@ with st.sidebar:
     st.markdown(f"**Device:** `{DEVICE}`")
 
 # Example questions
-with st.expander("View Example Questions"):
-    st.write("Click on any example to use it:")
+with st.container():
+    st.markdown(" ", unsafe_allow_html=True)  # small spacer
+    st.markdown("<div style='padding-top:100px; text-align: center;'>", unsafe_allow_html=True)
+    st.markdown("### 💡 Example Questions")
+    st.markdown("Click on any example to use it:")
+    
     example_questions = [
         "What is all the information about the Marketing department?",
         "What are the ids and names of department stores with both marketing and managing departments?",
@@ -192,11 +196,17 @@ if 'query_history' in st.session_state and st.session_state.query_history:
         st.markdown("---")
 
 # Query input
-user_question = st.text_input(
-    "💬 Enter your question about the department store database:",
-    placeholder="e.g., What is the total sales amount for each department?",
-    key="user_question_input"
-)
+with st.container():
+    st.markdown("<div style='padding-top: 80px;'>", unsafe_allow_html=True)
+    
+    user_question = st.text_input(
+        "💬 Enter your question about the department store database:",
+        placeholder="e.g., What is the total sales amount for each department?",
+        key="user_question_input"
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 # Generate button
 if st.button("Generate SQL", type="primary", disabled=not user_question):
