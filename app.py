@@ -127,11 +127,6 @@ if not st.session_state.initialized:
             st.error(f"Error initializing models: {str(e)}")
             st.stop()
 
-# Originally this was a syntax error
-st.markdown("""
-This interface generates SQL queries for the department store database using RAG (Retrieval-Augmented Generation).
-""")
-
 # Custom CSS
 st.markdown("""
     <style>
@@ -150,7 +145,7 @@ st.markdown("""
 # Display device info
 with st.sidebar:
     st.markdown("## Spider RAG Generator")
-    st.markdown("This interface generates SQL queries for the department store database
+    st.markdown("This interface generates SQL queries for the department store database.")
     st.image("hyundai.png", width=250)
     st.sidebar.info(f"Running on: {DEVICE}")
 if DEVICE == "cuda":
