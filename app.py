@@ -144,22 +144,13 @@ st.markdown("""
 
 # Display device info
 with st.sidebar:
+    st.image("hyundai.png", width=250)
     st.markdown("## Spider RAG Generator")
     st.markdown("This interface generates SQL queries for the department store database.")
-    st.image("hyundai.png", width=250)
-    st.sidebar.info(f"Running on: {DEVICE}")
-if DEVICE == "cuda":
-    st.sidebar.info(f"GPU: {torch.cuda.get_device_name(0)}")
-    allocated = torch.cuda.memory_allocated() / 1024**3
-    reserved = torch.cuda.memory_reserved() / 1024**3
-    st.sidebar.info(f"GPU Memory: {allocated:.2f}GB / {reserved:.2f}GB")
-
-# Query input
-user_question = st.text_input(
-    "Enter your question about the department store database:",
-    placeholder="e.g., What is the total sales amount for each department?",
-    key="user_question_input"
-)
+    st.markdown("### 🔍 Model Configuration")
+    st.markdown(f"**Embedding Model:** `{EMBEDDING_MODEL_NAME}`")
+    st.markdown(f"**LLM Model:** `{LLM_MODEL_NAME}`")
+    st.markdown(f"**Device:** `{DEVICE}`")
 
 # Example questions
 with st.expander("View Example Questions"):
@@ -248,16 +239,25 @@ if st.session_state.current_result:
         st.info("Query execution would show results here")
 
 # Query history
+# Query history as chat-style scroll
 if 'query_history' in st.session_state and st.session_state.query_history:
-    st.header("📜 Query History")
-    for i, item in enumerate(reversed(st.session_state.query_history[-5:])):
-        with st.expander(f"Query {len(st.session_state.query_history) - i}: {item['question'][:50]}..."):
-            st.write(f"**Question:** {item['question']}")
-            st.code(item['sql'], language='sql')
+    st.markdown("## Query History")
+    for item in reversed(st.session_state.query_history):
+        st.markdown(f"**🧠 Question:** {item['question']}")
+        st.code(item['sql'], language='sql')
+        st.markdown("---")
+
+
+# Query input
+user_question = st.text_input(
+    "💬 Enter your question about the department store database:",
+    placeholder="e.g., What is the total sales amount for each department?",
+    key="user_question_input"
+)
 
 # Footer
 st.markdown("---")
-st.markdown("Built with Streamlit and Spider RAG System")
+st.markdown("Built with Streamlit")
 
 # GPU Cache clear button
 if DEVICE == "cuda":
