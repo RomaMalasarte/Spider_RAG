@@ -150,7 +150,7 @@ st.markdown("""
 
 # Display device info
 with st.sidebar:
-    st.image("./hyundai.png", width=250)
+    st.image("hyundai.png", width=250)
     st.sidebar.info(f"Running on: {DEVICE}")
 if DEVICE == "cuda":
     st.sidebar.info(f"GPU: {torch.cuda.get_device_name(0)}")
