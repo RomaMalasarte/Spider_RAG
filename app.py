@@ -148,61 +148,37 @@ with st.sidebar:
     st.markdown("## Spider RAG Generator")
     st.markdown("This interface generates SQL queries for the department store database.")
     st.markdown("### 🔍 Model Configuration")
-    st.markdown(f"**Embedding Model:** `{EMBEDDING_MODEL_NAME}`")
-    st.markdown(f"**LLM Model:** `{LLM_MODEL_NAME}`")
-    st.markdown(f"**Device:** `{DEVICE}`")
+    st.markdown(f"**Embedding Model:** {EMBEDDING_MODEL_NAME}")
+    st.markdown(f"**LLM Model:** {LLM_MODEL_NAME}")
+    st.markdown(f"**Device:** {DEVICE}")
 
-# SQL Generation Logic
-if 'generate_clicked' in locals() and generate_clicked:
-    with st.spinner("Generating SQL query..."):
-        try:
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+# Example questions
+with st.container():
+    st.markdown(" ", unsafe_allow_html=True)  # small spacer
+    st.markdown("<div style='padding-top:100px; text-align: center;'>", unsafe_allow_html=True)
+    st.markdown("### 💡 Example Questions")
+    st.markdown("Click on any example to use it:")
+    
+    example_questions = [
+        "What is all the information about the Marketing department?",
+        "What are the ids and names of department stores with both marketing and managing departments?",
+        "Return the ids of the two department store chains with the most department stores.",
+        "What is the id of the department with the least number of staff?",
+        "Tell me the employee id of the head of the department with the least employees.",
+        "Return the id of the department with the fewest staff assignments.",
+        "What is the code of the product type with an average price higher than the average price of all products?"
+    ]
+    cols = st.columns(2)
+    for i, q in enumerate(example_questions):
+        with cols[i % 2]:
+            if st.button(q, key=f"ex_{i}"):
+                st.session_state.selected_example = q
+                st.rerun()
 
-            with torch.no_grad():
-                q_vec = compute_embedding(st.session_state.embed_model, user_question)
-
-            query_item = {
-                "question": user_question,
-                "embedding": q_vec
-            }
-
-            result = rag_query(
-                tokenizer=st.session_state.tokenizer,
-                llm_model=st.session_state.llm_model,
-                documents=st.session_state.documents,
-                db_id="department_store",
-                query=query_item,
-                k=3
-            )
-
-            sql_pred = result["generated_sql"]
-            st.success("SQL query generated successfully!")
-            st.subheader("Generated SQL:")
-            st.code(sql_pred, language='sql')
-
-            if 'query_history' not in st.session_state:
-                st.session_state.query_history = []
-
-            st.session_state.query_history.append({
-                "question": user_question,
-                "sql": sql_pred,
-            })
-
-            st.session_state.current_result = sql_pred
-
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
-        except torch.cuda.OutOfMemoryError:
-            st.error("GPU out of memory! Try restarting, using a smaller model, or switching to CPU.")
-        except Exception as e:
-            st.error(f"Error generating SQL: {str(traceback.format_exc())}")
-            st.write("Debug info:")
-            st.write(f"- Question: {user_question}")
-            st.write(f"- Device: {DEVICE}")
-            if torch.cuda.is_available():
-                st.write(f"- GPU Memory: {torch.cuda.memory_allocated() / 1024**3:.2f}GB allocated")
+# Check if example was clicked
+if 'selected_example' in st.session_state:
+    user_question = st.session_state.selected_example
+    del st.session_state.selected_example
 
 
 # Execute query button
@@ -210,6 +186,7 @@ if st.session_state.current_result:
     if st.button("▶️ Execute Query", key="execute_query"):
         st.info("Query execution would show results here")
 
+# Query history
 # Query history as chat-style scroll
 if 'query_history' in st.session_state and st.session_state.query_history:
     st.markdown("## Query History")
@@ -218,35 +195,75 @@ if 'query_history' in st.session_state and st.session_state.query_history:
         st.code(item['sql'], language='sql')
         st.markdown("---")
 
-# Query input and Generate button in one row
-with st.container(): 
-    cols = st.columns([6, 1])
-    with cols[0]:
-        user_question = st.text_input(
-            "💬 Enter your question about the department store database:",
-            placeholder="e.g., What is the total sales amount for each department?",
-            key="user_question_input"
-        )
-    with cols[1]:
-        generate_clicked = st.button("Generate SQL", type="primary", disabled=not user_question)
+# Query input
+with st.container():
+    st.markdown("<div style='padding-top: 80px;'>", unsafe_allow_html=True)
+    
+    user_question = st.text_input(
+        "💬 Enter your question about the department store database:",
+        placeholder="e.g., What is the total sales amount for each department?",
+        key="user_question_input"
+    )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# example_questions = [
-    #"What is all the information about the Marketing department?",
-    #"What are the ids and names of department stores with both marketing and managing departments?",
-    #"Return the ids of the two department store chains with the most department stores.",
-    #"What is the id of the department with the least number of staff?",
-    #"Tell me the employee id of the head of the department with the least employees.",
-    #"Return the id of the department with the fewest staff assignments.",
-    #"What is the code of the product type with an average price higher than the average price of all products?"
-#]
 
-#selected_example = st.selectbox("View Example Questions", [""] + example_questions)
-
-#if selected_example:
-    # Automatically fill the input field
-    #st.session_state.user_question_input = selected_example
+# Generate button
+if st.button("Generate SQL", type="primary", disabled=not user_question):
+    with st.spinner("Generating SQL query..."):
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
+            with torch.no_grad():
+                q_vec = compute_embedding(st.session_state.embed_model, user_question)
+            
+            query_item = {
+                "question": user_question,
+                "embedding": q_vec
+            }
+            
+            result = rag_query(
+                tokenizer=st.session_state.tokenizer,
+                llm_model=st.session_state.llm_model,
+                documents=st.session_state.documents,
+                db_id="department_store",
+                query=query_item,
+                k=3
+            )
+            
+            sql_pred = result["generated_sql"]
+            st.success("SQL query generated successfully!")
+            st.subheader("Generated SQL:")
+            st.code(sql_pred, language='sql')
+            
+            if 'query_history' not in st.session_state:
+                st.session_state.query_history = []
+            
+            st.session_state.query_history.append({
+                "question": user_question,
+                "sql": sql_pred,
+            })
+            
+            st.session_state.current_result = sql_pred
+            
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
+        except torch.cuda.OutOfMemoryError:
+            st.error("GPU out of memory! Try the following:")
+            st.write("1. Restart the kernel/session")
+            st.write("2. Use a smaller model")
+            st.write("3. Reduce batch size in generation")
+            st.write("4. Switch to CPU by changing DEVICE to 'cpu'")
+            
+        except Exception as e:
+            st.error(f"Error generating SQL: {str(traceback.format_exc())}")
+            st.write("Debug info:")
+            st.write(f"- Question: {user_question}")
+            st.write(f"- Device: {DEVICE}")
+            if torch.cuda.is_available():
+                st.write(f"- GPU Memory: {torch.cuda.memory_allocated() / 1024**3:.2f}GB allocated")
 
 # Footer
 st.markdown("---")
