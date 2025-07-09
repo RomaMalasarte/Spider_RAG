@@ -157,28 +157,32 @@ with st.container():
     st.markdown(" ", unsafe_allow_html=True)  # small spacer
     st.markdown("<div style='padding-top:100px; text-align: center;'>", unsafe_allow_html=True)
     st.markdown("### 💡 Example Questions")
-    st.markdown("Click on any example to use it:")
+    st.markdown(" 1. What is all the information about the Marketing department?")
+    st.markdown(" 2. What are the ids and names of department stores with both marketing and managing departments?")
+    st.markdown(" 3. Return the ids of the two department store chains with the most department stores.")
+    st.markdown(" 4. What is the id of the department with the least number of staff?")
+    st.markdown(" 5. Tell me the employee id of the head of the department with the least employees.")
     
-    example_questions = [
-        "What is all the information about the Marketing department?",
-        "What are the ids and names of department stores with both marketing and managing departments?",
-        "Return the ids of the two department store chains with the most department stores.",
-        "What is the id of the department with the least number of staff?",
-        "Tell me the employee id of the head of the department with the least employees.",
-        "Return the id of the department with the fewest staff assignments.",
-        "What is the code of the product type with an average price higher than the average price of all products?"
-    ]
-    cols = st.columns(2)
-    for i, q in enumerate(example_questions):
-        with cols[i % 2]:
-            if st.button(q, key=f"ex_{i}"):
-                st.session_state.selected_example = q
-                st.rerun()
+    #example_questions = [
+        #"What is all the information about the Marketing department?",
+        #"What are the ids and names of department stores with both marketing and managing departments?",
+        #"Return the ids of the two department store chains with the most department stores.",
+        #"What is the id of the department with the least number of staff?",
+        #"Tell me the employee id of the head of the department with the least employees.",
+        #"Return the id of the department with the fewest staff assignments.",
+        #"What is the code of the product type with an average price higher than the average price of all products?"
+    #]
+    #cols = st.columns(2)
+    #for i, q in enumerate(example_questions):
+        #with cols[i % 2]:
+            #if st.button(q, key=f"ex_{i}"):
+                #st.session_state.selected_example = q
+                #st.rerun()
 
 # Check if example was clicked
-if 'selected_example' in st.session_state:
-    user_question = st.session_state.selected_example
-    del st.session_state.selected_example
+#if 'selected_example' in st.session_state:
+   # user_question = st.session_state.selected_example
+    #del st.session_state.selected_example
 
 
 # Execute query button
