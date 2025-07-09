@@ -3,7 +3,14 @@ from typing import Dict, List
 from util.retrieve import multi_stage_search, cols_of_table_top_k, fk_edges_from
 
 
-def generate_user_prompt(tokenizer, query: Dict, retrieved_docs: List[Dict], TOP_K_COLUMNS: int = 5) -> str:
+def generate_user_prompt(
+    layers, 
+    tokenizer, 
+    query: Dict, 
+    retrieved_docs: List[Dict], 
+    TOP_K_COLUMNS: int = 5
+
+) -> str:
     """
     Generate the user prompt for SQL generation.
 
@@ -15,7 +22,6 @@ def generate_user_prompt(tokenizer, query: Dict, retrieved_docs: List[Dict], TOP
     Returns:
         The formatted user prompt string
     """
-    layers = multi_stage_search(query["embedding"], breadth=4, max_hops=4)
     # System prompt
     sys_context = (
         "You are now an excellent SQL writer. I will give you the database schema, and "
@@ -139,7 +145,7 @@ def generate_sql(
     # Generate prompts for each document group
     for doc_group, nums in zip(retrieved_docs, sample_list):
         # doc_group is now guaranteed to be a List[Dict]
-        prompt = generate_user_prompt(tokenizer, query, doc_group)
+        prompt = generate_user_prompt(layers, tokenizer, query, doc_group)
         prompt_list.append(prompt)
 
         # Tokenize the prompt
