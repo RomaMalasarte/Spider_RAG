@@ -232,21 +232,21 @@ with st.container():
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-example_questions = [
-    "What is all the information about the Marketing department?",
-    "What are the ids and names of department stores with both marketing and managing departments?",
-    "Return the ids of the two department store chains with the most department stores.",
-    "What is the id of the department with the least number of staff?",
-    "Tell me the employee id of the head of the department with the least employees.",
-    "Return the id of the department with the fewest staff assignments.",
-    "What is the code of the product type with an average price higher than the average price of all products?"
-]
+# example_questions = [
+    #"What is all the information about the Marketing department?",
+    #"What are the ids and names of department stores with both marketing and managing departments?",
+    #"Return the ids of the two department store chains with the most department stores.",
+    #"What is the id of the department with the least number of staff?",
+    #"Tell me the employee id of the head of the department with the least employees.",
+    #"Return the id of the department with the fewest staff assignments.",
+    #"What is the code of the product type with an average price higher than the average price of all products?"
+#]
 
-selected_example = st.selectbox("View Example Questions", [""] + example_questions)
+#selected_example = st.selectbox("View Example Questions", [""] + example_questions)
 
-if selected_example:
+#if selected_example:
     # Automatically fill the input field
-    st.session_state.user_question_input = selected_example
+    #st.session_state.user_question_input = selected_example
 
 # Footer
 st.markdown("---")
