@@ -20,8 +20,9 @@ def rag_query(
     llm_model,
     documents: List[Dict],
     db_id: str,
-    query: Dict, 
-    k: int = 3) -> Dict:
+    query: Dict,
+    k: int | List[int] = [1,3,5],
+    ) -> Dict:
     """
     One-liner for the full RAG pipeline:
       1. retrieve k neighbours,
@@ -30,11 +31,21 @@ def rag_query(
     Returns a dict with the SQL and the examples retrieved.
     """
 
-    retrieved = retrieve(
-        documents=documents,
-        q_vec=query["embedding"], 
-        k=k
-    )
+    retrieved = None
+    if isinstance(k, list):
+        retrieved = []
+        for shot in k:
+            retrieved.append(retrieve(
+                documents=documents,
+                q_vec=query["embedding"], 
+                k=shot
+            ))
+    else:
+        retrieved = retrieve(
+            documents=documents,
+            q_vec=query["embedding"], 
+            k=k
+        )
 
     candidates = generate_sql(
         tokenizer=tokenizer, 
@@ -64,7 +75,7 @@ st.set_page_config(
 
 # Global variables
 EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
-LLM_MODEL_NAME = "Qwen/Qwen2.5-Coder-7B-Instruct"
+LLM_MODEL_NAME = "Qwen/Qwen2.5-Coder-14B-Instruct"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Initialize session state
@@ -202,7 +213,7 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
                 "question": user_question,
                 "embedding": q_vec
             }
-            
+            shots = [0,3,5]
             # Generate SQL using RAG
             result = rag_query(
                 tokenizer=st.session_state.tokenizer,
@@ -210,7 +221,7 @@ if st.button("🚀 Generate SQL", type="primary", disabled=not user_question):
                 documents=st.session_state.documents,
                 db_id="department_store",  # Fixed typo: was "departmetn_store"
                 query=query_item,
-                k=3
+                k=shots
             )
             
             sql_pred = result["generated_sql"]
