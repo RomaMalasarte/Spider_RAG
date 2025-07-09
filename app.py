@@ -186,7 +186,6 @@ if st.session_state.current_result:
     if st.button("▶️ Execute Query", key="execute_query"):
         st.info("Query execution would show results here")
 
-# Query history
 # Query history as chat-style scroll
 if 'query_history' in st.session_state and st.session_state.query_history:
     st.markdown("## Query History")
@@ -195,34 +194,37 @@ if 'query_history' in st.session_state and st.session_state.query_history:
         st.code(item['sql'], language='sql')
         st.markdown("---")
 
-# Query input
+# Query input and Generate button in one row
 with st.container():
     st.markdown("<div style='padding-top: 80px;'>", unsafe_allow_html=True)
     
-    user_question = st.text_input(
-        "💬 Enter your question about the department store database:",
-        placeholder="e.g., What is the total sales amount for each department?",
-        key="user_question_input"
-    )
+    cols = st.columns([6, 1])
+    with cols[0]:
+        user_question = st.text_input(
+            "💬 Enter your question about the department store database:",
+            placeholder="e.g., What is the total sales amount for each department?",
+            key="user_question_input"
+        )
+    with cols[1]:
+        generate_clicked = st.button("Generate SQL", type="primary", disabled=not user_question)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-# Generate button
-if st.button("Generate SQL", type="primary", disabled=not user_question):
+# SQL Generation Logic
+if 'generate_clicked' in locals() and generate_clicked:
     with st.spinner("Generating SQL query..."):
         try:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            
+
             with torch.no_grad():
                 q_vec = compute_embedding(st.session_state.embed_model, user_question)
-            
+
             query_item = {
                 "question": user_question,
                 "embedding": q_vec
             }
-            
+
             result = rag_query(
                 tokenizer=st.session_state.tokenizer,
                 llm_model=st.session_state.llm_model,
@@ -231,32 +233,27 @@ if st.button("Generate SQL", type="primary", disabled=not user_question):
                 query=query_item,
                 k=3
             )
-            
+
             sql_pred = result["generated_sql"]
             st.success("SQL query generated successfully!")
             st.subheader("Generated SQL:")
             st.code(sql_pred, language='sql')
-            
+
             if 'query_history' not in st.session_state:
                 st.session_state.query_history = []
-            
+
             st.session_state.query_history.append({
                 "question": user_question,
                 "sql": sql_pred,
             })
-            
+
             st.session_state.current_result = sql_pred
-            
+
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            
+
         except torch.cuda.OutOfMemoryError:
-            st.error("GPU out of memory! Try the following:")
-            st.write("1. Restart the kernel/session")
-            st.write("2. Use a smaller model")
-            st.write("3. Reduce batch size in generation")
-            st.write("4. Switch to CPU by changing DEVICE to 'cpu'")
-            
+            st.error("GPU out of memory! Try restarting, using a smaller model, or switching to CPU.")
         except Exception as e:
             st.error(f"Error generating SQL: {str(traceback.format_exc())}")
             st.write("Debug info:")
@@ -264,6 +261,7 @@ if st.button("Generate SQL", type="primary", disabled=not user_question):
             st.write(f"- Device: {DEVICE}")
             if torch.cuda.is_available():
                 st.write(f"- GPU Memory: {torch.cuda.memory_allocated() / 1024**3:.2f}GB allocated")
+
 
 # Footer
 st.markdown("---")
