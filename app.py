@@ -1,7 +1,9 @@
 import nltk
 import spacy
 import torch
+import sqlite3
 import traceback
+import pandas as pd
 import streamlit as st
 from typing import Dict, List
 from util.retrieve import retrieve
@@ -14,6 +16,16 @@ from util.load_data import load_schema, load_data_from_file, compute_embedding
 def setup_nltk():
     nltk.download('punkt_tab')
     return True
+
+def execute_sql_query(db_path: str, sql_query: str):
+    """Execute SQL query and return results as a pandas DataFrame"""
+    try:
+        conn = sqlite3.connect(db_path)
+        df = pd.read_sql_query(sql_query, conn)
+        conn.close()
+        return df, None
+    except Exception as e:
+        return None, str(e)
 
 def rag_query(
     tokenizer,
@@ -63,6 +75,7 @@ def rag_query(
     return {
         "question": query["question"],
         "generated_sql": best_sql,
+        "db_path": db_path
     }
 
 # Only one call to st.set_page_config is allowed
@@ -82,6 +95,7 @@ if 'initialized' not in st.session_state:
     st.session_state.initialized = False
     st.session_state.query_history = []
     st.session_state.current_result = None
+    st.session_state.current_db_path = None
 
 # Initialize models and data only once
 if not st.session_state.initialized:
@@ -173,42 +187,57 @@ with st.container():
     st.markdown(" 3. Return the ids of the two department store chains with the most department stores.")
     st.markdown(" 4. What is the id of the department with the least number of staff?")
     st.markdown(" 5. Tell me the employee id of the head of the department with the least employees.")
-    
-    #example_questions = [
-        #"What is all the information about the Marketing department?",
-        #"What are the ids and names of department stores with both marketing and managing departments?",
-        #"Return the ids of the two department store chains with the most department stores.",
-        #"What is the id of the department with the least number of staff?",
-        #"Tell me the employee id of the head of the department with the least employees.",
-        #"Return the id of the department with the fewest staff assignments.",
-        #"What is the code of the product type with an average price higher than the average price of all products?"
-    #]
-    #cols = st.columns(2)
-    #for i, q in enumerate(example_questions):
-        #with cols[i % 2]:
-            #if st.button(q, key=f"ex_{i}"):
-                #st.session_state.selected_example = q
-                #st.rerun()
-
-# Check if example was clicked
-#if 'selected_example' in st.session_state:
-   # user_question = st.session_state.selected_example
-    #del st.session_state.selected_example
-
 
 # Execute query button
-if st.session_state.current_result:
+if st.session_state.current_result and st.session_state.current_db_path:
     if st.button("▶️ Execute Query", key="execute_query"):
-        st.info("Query execution would show results here")
+        with st.spinner("Executing SQL query..."):
+            df, error = execute_sql_query(st.session_state.current_db_path, st.session_state.current_result)
+            
+            if error:
+                st.error(f"Error executing query: {error}")
+            else:
+                st.success("Query executed successfully!")
+                st.subheader("Query Results:")
+                
+                # Display results info
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Number of Rows", len(df))
+                with col2:
+                    st.metric("Number of Columns", len(df.columns))
+                
+                # Display the dataframe
+                st.dataframe(df, use_container_width=True)
+                
+                # Option to download results as CSV
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download results as CSV",
+                    data=csv,
+                    file_name="query_results.csv",
+                    mime="text/csv"
+                )
 
 # Query history
-# Query history as chat-style scroll
 if 'query_history' in st.session_state and st.session_state.query_history:
     st.markdown("## Query History")
-    for item in reversed(st.session_state.query_history):
-        st.markdown(f"**🧠 Question:** {item['question']}")
-        st.code(item['sql'], language='sql')
-        st.markdown("---")
+    for i, item in enumerate(reversed(st.session_state.query_history)):
+        with st.expander(f"Query {len(st.session_state.query_history) - i}: {item['question'][:50]}..."):
+            st.markdown(f"**🧠 Question:** {item['question']}")
+            st.code(item['sql'], language='sql')
+            
+            # Add execute button for history items
+            if st.button(f"Execute this query", key=f"exec_hist_{i}"):
+                with st.spinner("Executing SQL query..."):
+                    df, error = execute_sql_query(item['db_path'], item['sql'])
+                    
+                    if error:
+                        st.error(f"Error executing query: {error}")
+                    else:
+                        st.success("Query executed successfully!")
+                        st.subheader("Query Results:")
+                        st.dataframe(df, use_container_width=True)
 
 # Query input
 with st.container():
@@ -221,7 +250,6 @@ with st.container():
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 # Generate button
 if st.button("Generate SQL", type="primary", disabled=not user_question):
@@ -248,19 +276,55 @@ if st.button("Generate SQL", type="primary", disabled=not user_question):
             )
             
             sql_pred = result["generated_sql"]
+            db_path = result["db_path"]
+            
             st.success("SQL query generated successfully!")
             st.subheader("Generated SQL:")
             st.code(sql_pred, language='sql')
             
+            # Store in session state
+            st.session_state.current_result = sql_pred
+            st.session_state.current_db_path = db_path
+            
+            # Add to history
             if 'query_history' not in st.session_state:
                 st.session_state.query_history = []
             
             st.session_state.query_history.append({
                 "question": user_question,
                 "sql": sql_pred,
+                "db_path": db_path
             })
             
-            st.session_state.current_result = sql_pred
+            # Auto-execute option
+            if st.checkbox("Auto-execute generated query", value=True):
+                with st.spinner("Executing SQL query..."):
+                    df, error = execute_sql_query(db_path, sql_pred)
+                    
+                    if error:
+                        st.error(f"Error executing query: {error}")
+                    else:
+                        st.success("Query executed successfully!")
+                        st.subheader("Query Results:")
+                        
+                        # Display results info
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Number of Rows", len(df))
+                        with col2:
+                            st.metric("Number of Columns", len(df.columns))
+                        
+                        # Display the dataframe
+                        st.dataframe(df, use_container_width=True)
+                        
+                        # Option to download results as CSV
+                        csv = df.to_csv(index=False)
+                        st.download_button(
+                            label="📥 Download results as CSV",
+                            data=csv,
+                            file_name="query_results.csv",
+                            mime="text/csv"
+                        )
             
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
