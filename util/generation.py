@@ -7,6 +7,9 @@ def generate_user_prompt(
     layers, 
     tokenizer, 
     query: Dict, 
+    column_embeds, 
+    G, 
+    tables,
     retrieved_docs: List[Dict], 
     TOP_K_COLUMNS: int = 5
 
@@ -43,9 +46,8 @@ def generate_user_prompt(
     for hop, layer in enumerate(reversed(layers)):
         for score, tbl in reversed(layer):
             # Get top-k columns based on similarity to query
-            cols = cols_of_table_top_k(tbl, q_vec, k=TOP_K_COLUMNS)
-            fks = [(txt, key) for txt, key in fk_edges_from(tbl)]
-
+            cols = cols_of_table_top_k(column_embeds, G, tables, tbl, q_vec, k=5)
+            fks = [(txt, key) for txt, key in fk_edges_from(G, tbl)]
             table_schema += f"#Table: {tbl}\n"
             for idx, col in enumerate(cols):
                 if idx == len(cols) - 1:
@@ -108,7 +110,7 @@ def generate_sql(
     G,
     retrieved_docs: List[Dict] | List[List[Dict]],
     max_length: int = 256,
-    num_of_samples: int = 6,
+    num_of_samples: int = 7,
     temperature: float = 0.7,
     top_p: float = 0.8,
     top_k: int = 20,
@@ -136,7 +138,7 @@ def generate_sql(
         sample_list = [1, half, half]
     else:
         half = int((num_of_samples - 2) / 2)
-        sample_list = [1, half, half]
+        sample_list = [2, half, half]
 
         # Ensure we have enough document groups for sample_list
     while len(retrieved_docs) < len(sample_list):
@@ -145,7 +147,7 @@ def generate_sql(
     # Generate prompts for each document group
     for doc_group, nums in zip(retrieved_docs, sample_list):
         # doc_group is now guaranteed to be a List[Dict]
-        prompt = generate_user_prompt(layers, tokenizer, query, doc_group)
+        prompt = generate_user_prompt(layers, tokenizer, query, column_embeds, G, tables, doc_group)
         prompt_list.append(prompt)
 
         # Tokenize the prompt
